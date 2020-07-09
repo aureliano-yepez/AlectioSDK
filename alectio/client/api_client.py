@@ -9,7 +9,7 @@ from gql.transport.requests import RequestsHTTPTransport
 
 class AlectioClient:
     def __init__(self, environ=os.environ):
-        self._environ = environ
+        self._environ = environ 
 
 
         if 'ALECTIO_API_KEY' not in self._environ:
@@ -33,44 +33,54 @@ class AlectioClient:
 
 
 
-
-
-
     def execute(self):
         """
         execute graphql query
         """
 
-        # make post request to query
+        data = json.dumps(
+            {'query': query, 'variables': params}).encode('utf-8')
+
+        try:
+            response = requests.post(self.endpoint, data=data)
+
+            logger.debug("Response: %s", response.text)
         return 
 
 
     # user need to be authenticated somehow
-    def get_user(self):
+    def user(self): 
+
         return 
 
-    def get_user_project(self):
+    def projects(self):
+        # given a user search through all the projects 
         return 
 
-    def get_user_project_experiment(self):
+    def experiments(self, project_id):
+        # given a project object search through all the experiments. 
         return 
 
-    def get_company_models(self):
-        return
-
-    def create_experiment(self):
+    def models(self):
+        # get all the models the user is associated with
         return 
 
+    def project(self, project_id):
+        # get project information 
+        return 
+
+    def experiment(self):
+        # get experiment information
+        return 
+
+    def model(self, model_id):
+        # get model information
+        return 
 
     def create_project(self):
+        # create a project either through command line 
         return 
 
-
-
-
-
-
-        
-
-
-        
+    def create_experiment(self):
+        # create an experiment given a project item 
+        return 
