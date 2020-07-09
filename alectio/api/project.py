@@ -10,6 +10,15 @@ class Project:
         return 
 
     def upload_classes(self):
+        """
+        upload class labels to the user project 
+        """
+        return 
+
+    def pending_labels(self):  
+        """
+        show all pending labels for a project 
+        """
         return 
 
 
