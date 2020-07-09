@@ -5,9 +5,8 @@
 # import torch.nn as nn
 # from torch.utils.data import DataLoader, Subset
 # from torchtext.datasets import text_classification
-
-# from tqdm import tqdm
-# from model import TextSentiment
+from tqdm import tqdm
+from model import TextSentiment
 
 import torch
 import torchvision
