@@ -1,5 +1,6 @@
 import requests
 import os 
+import json
 
 from gql import Client, gql
 from gql.client import RetryError
@@ -18,8 +19,8 @@ class AlectioClient:
 
         self.api_key = self._environ['ALECTIO_API_KEY']
 
+        # cli user settings
         self.settings = {
-            'section': "default",
             'git_remote': "origin",
             'ignore_globs': [],
             'base_url': "https://api.alectio.com"
@@ -33,7 +34,7 @@ class AlectioClient:
 
 
 
-    def execute(self):
+    def execute(self, query, params):
         """
         execute graphql query
         """
@@ -44,8 +45,11 @@ class AlectioClient:
         try:
             response = requests.post(self.endpoint, data=data)
 
-            logger.debug("Response: %s", response.text)
-        return 
+            # logger.debug("Response: %s", response.text)
+        except RuntimeError:
+            # logger.debug("Response: %s", response.text
+            pass
+        return 1
 
 
     # user need to be authenticated somehow
