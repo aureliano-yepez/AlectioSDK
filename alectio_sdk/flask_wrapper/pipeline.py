@@ -211,7 +211,7 @@ class Pipeline(object):
         # dir for expt log in S3
         expt_dir = [payload["user_id"], payload["project_id"], payload["experiment_id"]]
 
-        if self.bucket_name == self.config["sandbox_bucket"]:
+        if self.bucket_name == "alectio-sandbox":
             # shared S3 bucket for sandbox user
             self.expt_dir = os.path.join(
                 payload["user_id"], payload["project_id"], payload["experiment_id"]
@@ -249,7 +249,8 @@ class Pipeline(object):
         self.app.logger.info(
             "SDK Retrieved file: {} from bucket : {}".format(key, self.bucket_name)
         )
-
+    
+        self.train_size = int(self.meta_data["train_size"])
         # self.meta_data = self.client.read(self.bucket_name, key, "json")
         # logging.info('SDK Retrieved file: {} from bucket : {}'.format(key, self.bucket_name))
 
@@ -259,6 +260,18 @@ class Pipeline(object):
                 "Extracting indices for our reference, this may take time ... Please be patient"
             )
             self.state_json = self.getstate_fn(args)
+            local_data_set_size = len(self.state_json.keys())
+            if local_data_set_size != self.train_size:
+                # please make sure to submit the correct training size
+                print('======== Experiment Ended ========')
+                print('Server shutting down...')
+                warning_message = f"Current data set size: {local_data_set_size} does not match the training set size {self.train_size} ..."
+                print(warning_message)
+                p = psutil.Process(os.getpid())
+                p.terminate() 
+                return
+
+
             object_key = os.path.join(self.expt_dir, "data_map.pkl")
             self.app.logger.info("Extraction complete !!!")
             self.app.logger.info(
