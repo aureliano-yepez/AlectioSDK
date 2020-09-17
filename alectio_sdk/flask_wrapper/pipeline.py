@@ -112,13 +112,14 @@ class Pipeline(object):
         # dir for expt log in S3
         expt_dir = [payload["user_id"], payload["project_id"], payload["experiment_id"]]
 
-        if self.bucket_name == self.config["sandbox_bucket"]:
+
+        if self.bucket_name == "alectio-sandbox":
             # shared S3 bucket for sandbox user
             self.expt_dir = os.path.join(
                 payload["user_id"], payload["project_id"], payload["experiment_id"]
             )
-
             self.project_dir = os.path.join(payload["user_id"], payload["project_id"])
+
         else:
             # dedicated S3 bucket for paid user
             self.expt_dir = os.path.join(
@@ -129,6 +130,8 @@ class Pipeline(object):
 
         # get meta-data of the data set
         key = os.path.join(self.project_dir, "meta.json")
+        print("#######")
+        print(key)
         bucket = boto3.resource("s3").Bucket(self.bucket_name)
         json_load_s3 = lambda f: json.load(bucket.Object(key=f).get()["Body"])
         self.meta_data = json_load_s3(key)
