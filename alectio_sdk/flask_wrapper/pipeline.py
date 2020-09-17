@@ -130,11 +130,12 @@ class Pipeline(object):
 
         # get meta-data of the data set
         key = os.path.join(self.project_dir, "meta.json")
-        print("#######")
-        print(key)
         bucket = boto3.resource("s3").Bucket(self.bucket_name)
         json_load_s3 = lambda f: json.load(bucket.Object(key=f).get()["Body"])
         self.meta_data = json_load_s3(key)
+        
+
+        self.train_size = int(self.meta_data["train_size"])
 
         # self.meta_data = self.client.read(self.bucket_name, key, "json")
         logging.info('SDK Retrieved file: {} from bucket : {}'.format(key, self.bucket_name))
@@ -142,6 +143,18 @@ class Pipeline(object):
         if self.cur_loop == 0:
             self.resume_from = None
             self.state_json = self.getstate_fn(args)
+            local_data_set_size = len(self.state_json.keys())
+            if local_data_set_size != self.train_size:
+                # please make sure to submit the correct training size
+                print('======== Experiment Ended ========')
+                print('Server shutting down...')
+                warning_message = f"Current data set size: {local_data_set_size} does not match the training set size {self.train_size} ..."
+                print(warning_message)
+                p = psutil.Process(os.getpid())
+                p.terminate()
+                
+                return
+        
             object_key = os.path.join(self.expt_dir, "data_map.pkl")
             self.client.multi_part_upload_with_s3(self.state_json, self.bucket_name, object_key, "pickle")
         else:
