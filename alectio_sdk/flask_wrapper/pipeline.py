@@ -21,7 +21,8 @@ from .s3_client import S3Client
 from alectio_sdk.metrics.object_detection import Metrics, batch_to_numpy
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
-from sklearn.externals import joblib
+# from sklearn.externals import joblib
+import joblib
 
 # modules for testing
 import argparse
@@ -218,7 +219,7 @@ class Pipeline(object):
             )
 
             self.project_dir = os.path.join(payload["user_id"], payload["project_id"])
-
+            self.app.logger.info("here -1")
         else:
             # dedicated S3 bucket for paid user
             self.expt_dir = os.path.join(
@@ -230,17 +231,22 @@ class Pipeline(object):
         if (
             self.demopayload["bucket_name"] == "alectio-company-demos"
         ):  ####### Future Front end optimzation needed to avoid double writing
+            self.app.logger.info("here")
             self.demoexpt_dir = os.path.join(
                 self.args["demoname"],
                 self.demopayload["project_id"],
                 self.demopayload["experiment_id"],
             )
 
+        
+
             self.demoproject_dir = os.path.join(self.demopayload["project_id"])
 
         self.app.logger.info("Essential experiment params have been extracted")
         # get meta-data of the data set
         self.app.logger.info("Verifying the meta.json that was uploaded by the user")
+        self.app.logger.info("###############")
+        self.app.logger.info(self.project_dir)
         key = os.path.join(self.project_dir, "meta.json")
         bucket = boto3.resource("s3").Bucket(self.bucket_name)
 
