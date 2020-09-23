@@ -36,6 +36,7 @@ def train(args, labeled, resume_from, ckpt_file):
         trainset, batch_size=batch_size, shuffle=False, num_workers=2
     )
 
+    predictions, targets = [], []
     net = Net().to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum)
@@ -56,6 +57,9 @@ def train(args, labeled, resume_from, ckpt_file):
 
             outputs = net(images)
             loss = criterion(outputs, labels)
+            _, predicted = torch.max(outputs.data, 1)
+            predictions.extend(predicted.cpu().numpy().tolist())
+            targets.extend(labels.cpu().numpy().tolist())
 
             optimizer.zero_grad()
             loss.backward()
@@ -67,7 +71,7 @@ def train(args, labeled, resume_from, ckpt_file):
     ckpt = {"model": net.state_dict(), "optimizer": optimizer.state_dict()}
     torch.save(ckpt, os.path.join(args["EXPT_DIR"], ckpt_file))
 
-    return
+    return {"predictions": predictions, "labels": targets}
 
 
 def test(args, ckpt_file):
@@ -114,25 +118,24 @@ def infer(args, unlabeled, ckpt_file):
     net.load_state_dict(ckpt["model"])
     net.eval()
 
-    correct, total = 0, 0
-
+    correct, total, k = 0, 0, 0
     outputs_fin = {}
-    with torch.no_grad():
-        for i, data in tqdm(enumerate(unlabeled_loader), desc="Inferring"):
-            images, labels = data
-            images, labels = images.to(device), labels.to(device)
-            outputs = net(images)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+    for i, data in tqdm(enumerate(unlabeled_loader), desc="Inferring"):
+        images, labels = data
+        images, labels = images.to(device), labels.to(device)
+        outputs = net(images).data
 
-            for j in range(len(outputs)):
-                outputs_fin[j] = {}
-                outputs_fin[j]["prediction"] = predicted[j].item()
-                outputs_fin[j]["pre_softmax"] = outputs[j].cpu().numpy()
+        _, predicted = torch.max(outputs, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+
+        for j in range(len(outputs)):
+            outputs_fin[k] = {}
+            outputs_fin[k]["prediction"] = predicted[j].item()
+            outputs_fin[k]["pre_softmax"] = outputs[j].cpu().numpy().tolist()
+            k += 1
 
     return {"outputs": outputs_fin}
-
 
 if __name__ == "__main__":
     labeled = list(range(1000))
