@@ -162,13 +162,15 @@ class Pipeline(object):
         print('## RECEIVED PAYLOAD FROM THE BACKEND ##')
 
         # data preloading if an incomming job is sent
-        labeling_type = payload["labeling_type"]
-        needs_labeling = payload["needs_labeling"]
+        self.labeling_type = payload["labeling_type"]
+        self.needs_labeling = payload["needs_labeling"]
+        self.cur_loop = payload["cur_loop"]
 
-        if needs_labeling and labeling_type == "partner":
+        if self.needs_labeling and self.labeling_type == "partner" and self.current_loop > 0:
             # upload data with alectio cli, refer to alectio cli for more info
+            # need to upload an absolute path
+            # https://stackoverflow.com/questions/51520/how-to-get-an-absolute-file-path-in-python
             job_id = payload["job_id"]
-
             message = f"labeling in progress"
             self.end_exp(message)
             return
@@ -283,6 +285,7 @@ class Pipeline(object):
         # logging.info('SDK Retrieved file: {} from bucket : {}'.format(key, self.bucket_name))
 
         if self.cur_loop == 0:
+
             self.resume_from = None
             self.app.logger.info(
                 "Extracting indices for our reference, this may take time ... Please be patient"
@@ -293,6 +296,20 @@ class Pipeline(object):
                 # please make sure to submit the correct training size
                 warning_message = f"Current data set size: {local_data_set_size} does not match the training set size {self.train_size} ..."
                 self.end_exp(warning_message)
+                return
+
+            # need to upload data_map
+            if self.needs_labeling and self.labeling_type == "partner" and self.current_loop > 0:
+                # upload data with alectio cli, refer to alectio cli for more info
+                # need to upload an absolute path
+                # https://stackoverflow.com/questions/51520/how-to-get-an-absolute-file-path-in-python
+                # look at the data map, should be able to reference the data map even if the sdk
+                # "dies"
+
+
+                job_id = payload["job_id"]
+                message = f"labeling in progress"
+                self.end_exp(message)
                 return
 
 
