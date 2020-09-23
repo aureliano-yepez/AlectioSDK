@@ -31,7 +31,6 @@ import argparse
 import yaml, json
 
 
-
 class Pipeline(object):
     r"""
     A wrapper for your `train`, `test`, and `infer` function. The arguments for your functions should be specifed
@@ -45,7 +44,6 @@ class Pipeline(object):
         getstate_fn (function): function specifying a mapping between indices and file names.
 
     """
-
     def __init__(self, name, train_fn, test_fn, infer_fn, getstate_fn, args):
         """
         sentry_sdk.init(
@@ -89,6 +87,7 @@ class Pipeline(object):
         self.app.add_url_rule("/one_loop", "one_loop", self.one_loop, methods=["POST"])
         self.app.add_url_rule("/end_exp", "end_exp", self.end_exp, methods=["POST"])
 
+
     def _notifyserverstatus(self, logdir):
         logging.basicConfig(
             filename=os.path.join(logdir, "Appstatus.log"), level=logging.INFO
@@ -103,9 +102,11 @@ class Pipeline(object):
             "Press CTRL + C to exit flask app , if Flask app terminates in the middle use fuser -k <port number>/tcp to terminate current process and relaunch alectio sdk"
         )
 
+
     def _checkdirs(self, dir_):
         if not os.path.exists(dir_):
             os.makedirs(dir_, exist_ok=True)
+
 
     def _setdemovars(self, demo="coco"):
         if demo == "coco":
@@ -117,6 +118,7 @@ class Pipeline(object):
                 "type": "Object Detection",
             }
             return demopayload
+
 
     def _estimate_exp_time(self, last_time):
         """
@@ -139,6 +141,7 @@ class Pipeline(object):
         time_left = convert(last_time * (self.n_loop - loops_completed))
         self.app.logger.info("Estimated time left for the experiment: {}".format(time_left))
         return time_left
+
 
     def one_loop(self):
         # Get payload args
@@ -200,6 +203,7 @@ class Pipeline(object):
         else:
             return jsonify({"Message": "Loop Failed - non 200 status returned"})
 
+
     def _one_loop(self, payload, args):
         r"""
         Executes one loop of active learning. Returns the read `payload` back to the user.
@@ -227,7 +231,7 @@ class Pipeline(object):
         self.bucket_name = payload["bucket_name"]
         self.n_loop = payload["n_loop"]
 
-        # type of the ML problem
+
         self.type = payload["type"]
 
         # dir for expt log in S3
@@ -250,7 +254,7 @@ class Pipeline(object):
 
         if (
             self.demopayload["bucket_name"] == "alectio-company-demos"
-        ):  ####### Future Front end optimzation needed to avoid double writing
+        ):
             self.app.logger.info("here")
             self.demoexpt_dir = os.path.join(
                 self.args["demoname"],
@@ -258,12 +262,10 @@ class Pipeline(object):
                 self.demopayload["experiment_id"],
             )
 
-
-
             self.demoproject_dir = os.path.join(self.demopayload["project_id"])
 
         self.app.logger.info("Essential experiment params have been extracted")
-        # get meta-data of the data set
+
         self.app.logger.info("Verifying the meta.json that was uploaded by the user")
         self.app.logger.info("###############")
         self.app.logger.info(self.project_dir)
@@ -277,8 +279,6 @@ class Pipeline(object):
         )
 
         self.train_size = int(self.meta_data["train_size"])
-        # self.meta_data = self.client.read(self.bucket_name, key, "json")
-        # logging.info('SDK Retrieved file: {} from bucket : {}'.format(key, self.bucket_name))
 
         if self.cur_loop == 0:
 
