@@ -3,6 +3,11 @@ from flask import Flask, Response
 from flask import request
 from flask import send_file
 from waitress import serve
+from copy import deepcopy
+from .s3_client import S3Client
+from alectio_sdk.metrics.object_detection import Metrics, batch_to_numpy
+from sentry_sdk.integrations.flask import FlaskIntegration
+from copy import deepcopy
 
 import numpy as np
 import json
@@ -16,12 +21,7 @@ import boto3
 import json
 import logging
 import sklearn.metrics
-from copy import deepcopy
-
-from .s3_client import S3Client
-from alectio_sdk.metrics.object_detection import Metrics, batch_to_numpy
 import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
 
 
 class Pipeline(object):
@@ -66,8 +66,23 @@ class Pipeline(object):
             "user_id": request.get_json()["user_id"],
             "bucket_name": request.get_json()["bucket_name"],
             "type": request.get_json()["type"],
+            "needs_labeling": request.get_json()["needs_labeling"],
+            "labeling_type": request.get_json()["labeling_type"] ,
+            "job_id": request.get_json()["job_id"]
         }
-        print('Received payload from backend')
+
+        print('## RECEIVED PAYLOAD FROM THE BACKEND ##')
+
+        # data preloading if an incomming job is sent
+        labeling_type = payload["labeling_type"]
+        needs_labeling = payload["needs_labeling"]
+
+        if needs_labeling and labeling_type == "partner":
+            # upload data with alectio cli, refer to alectio cli for more info
+            message = f"labeling in progress"
+            self.end_exp(message)
+            return
+
         returned_payload = self._one_loop(payload, self.args)
         backend_ip = self.config["backend_ip"]
         port = 80
@@ -90,7 +105,7 @@ class Pipeline(object):
 
             args = {sample_payload: 'sample_payload.json', EXPT_DIR : "./log", exp_name: "test", \
                                                                  train_epochs: 1, batch_size: 8}
-            app._one_loop(args)    
+            app._one_loop(args)
 
         """
         # payload = json.load(open(args["sample_payload"]))
@@ -329,9 +344,10 @@ class Pipeline(object):
         func()
 
     @staticmethod
-    def end_exp():
+    def end_exp(msg=None):
         print()
         print('======== Experiment Ended ========')
-        print('Server shutting down...')
+        print('Server shutting down ...')
+        print(msg)
         p = psutil.Process(os.getpid())
         p.terminate()
