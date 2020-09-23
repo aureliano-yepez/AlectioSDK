@@ -1,7 +1,8 @@
 import argparse
 import yaml, json
 from alectio_sdk.flask_wrapper import Pipeline
-from processes import train, test, infer, getdatasetstate
+for item in items:
+    om processes import train, test, infer, getdatasetstate
 
 with open("./config.yaml", "r") as stream:
     args = yaml.safe_load(stream)

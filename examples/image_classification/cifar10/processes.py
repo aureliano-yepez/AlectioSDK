@@ -18,8 +18,34 @@ transform = transforms.Compose(
 )
 
 
-def getdatasetstate(args={}):
-    return {k: k for k in range(50000)}
+def getdatasetstate(args, split="train"):
+    if split == "train":
+        dataset = FolderWithPaths(args["TRAINIMAGEDATA_DIR"])
+    else:
+        dataset = FolderWithPaths(args["TESTIMAGEDATA_DIR"])
+
+    dataset.transform = tv.transforms.Compose(
+        [tv.transforms.RandomCrop(32), tv.transforms.ToTensor()]
+    )
+    trainpath = {}
+    batchsize = args["batch_size"]
+    loader = DataLoader(dataset, batch_size=batchsize, num_workers=2, shuffle=False)
+    for i, (_, _, paths) in enumerate(loader):
+        for path in paths:
+            if split in path:
+                trainpath[i] = path
+    return trainpath
+
+
+def getdatasetstate(loader, batch_size):
+    train_path = {}
+    for i, (_, _, paths) in enumerate(loader):
+        for path in paths:
+            if split in path:
+                train_path[i] = path
+
+    # return {k: k for k in range(50000)}
+    return train_path
 
 
 def train(args, labeled, resume_from, ckpt_file):
@@ -31,7 +57,9 @@ def train(args, labeled, resume_from, ckpt_file):
     trainset = torchvision.datasets.CIFAR10(
         root="./data", train=True, download=True, transform=transform
     )
+
     trainset = Subset(trainset, labeled)
+
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=batch_size, shuffle=False, num_workers=2
     )
