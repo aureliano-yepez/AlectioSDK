@@ -373,6 +373,7 @@ class Pipeline(object):
         del payload["bucket_name"]
         return payload
 
+
     def train(self, args):
         r"""
         A wrapper for your `train` function. Returns `None`.
@@ -434,15 +435,16 @@ class Pipeline(object):
                 demo_insights_object_key,
                 "pickle",
             )
-            democheckpointsobject_key = os.path.join(self.demoexpt_dir, self.ckpt_file)
+            demo_checkpoints_object_key = os.path.join(self.demoexpt_dir, self.ckpt_file)
             loopcheckpointfile = os.path.join(self.args["LOG_DIR"], self.ckpt_file)
             self.client.multi_part_upload_file(
                 loopcheckpointfile,
                 self.demo_payload["bucket_name"],
-                democheckpointsobject_key,
+                demo_checkpoints_object_key,
             )
 
         return
+
 
     def test(self, args):
         r"""
@@ -498,6 +500,7 @@ class Pipeline(object):
 
         self.compute_metrics(predictions, ground_truth)
         return
+
 
     def compute_metrics(self, predictions, ground_truth):
         metrics = {}
