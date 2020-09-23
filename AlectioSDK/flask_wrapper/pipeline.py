@@ -8,7 +8,7 @@ from .s3_client import S3Client
 from alectio_sdk.metrics.object_detection import Metrics, batch_to_numpy
 from sentry_sdk.integrations.flask import FlaskIntegration
 from copy import deepcopy
-
+from alectio.client import AlectioClient
 
 import numpy as np
 import json
@@ -63,6 +63,8 @@ class Pipeline(object):
         self.getstate_fn = getstate_fn
         self.args = args
         self.client = S3Client()  # boto3.client('s3') #
+        self.set_alectio_client_env()
+        self.alectio_client = AlectioClient()
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(dir_path, "config.json"), "r") as f:
@@ -165,6 +167,8 @@ class Pipeline(object):
 
         if needs_labeling and labeling_type == "partner":
             # upload data with alectio cli, refer to alectio cli for more info
+            job_id = payload["job_id"]
+
             message = f"labeling in progress"
             self.end_exp(message)
             return
@@ -182,15 +186,13 @@ class Pipeline(object):
         self.app.logger.info(
             "Your results for this loop should be visible in Alectio website shortly"
         )
-        print(returned_payload)
+
         backend_ip = self.config["backend_ip"]
         port = 80
         url = "".join(["http://", backend_ip, ":{}".format(port), "/end_of_task"])
-        print("Url for backend ", url)
         status = requests.post(
             url=url, json=returned_payload, auth=("auth", os.environ["ALECTIO_API_KEY"])
         ).status_code
-        print("status =", status)
         if status == 200:
             self.app.logger.info(
                 "Experiment {} running".format(payload["experiment_id"])
@@ -641,6 +643,14 @@ class Pipeline(object):
             "Server intialized successfully , Intialize your training loop by triggering Train process from Alectio website"
         )
         self.app.run()
+
+
+    @staticmethod
+    def set_alectio_client_env():
+        os.environ['ALECTIO_API_KEY'] = ""
+        os.environ['CLIENT_SECRET'] = ""
+        os.environ['CLIENT_ID'] = ""
+        return
 
     @staticmethod
     def shutdown_server():
