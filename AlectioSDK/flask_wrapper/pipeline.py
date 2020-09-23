@@ -62,7 +62,7 @@ class Pipeline(object):
         self.infer_fn = infer_fn
         self.getstate_fn = getstate_fn
         self.args = args
-        self.client = S3Client()  # boto3.client('s3') #
+        self.client = S3Client()
         self.set_alectio_client_env()
         self.alectio_client = AlectioClient()
 
@@ -165,13 +165,10 @@ class Pipeline(object):
         self.labeling_type = payload["labeling_type"]
         self.needs_labeling = payload["needs_labeling"]
         self.cur_loop = payload["cur_loop"]
+        self.job_id = payload["job_id"]
 
         if self.needs_labeling and self.labeling_type == "partner" and self.current_loop > 0:
-            # upload data with alectio cli, refer to alectio cli for more info
-            # need to upload an absolute path
-            # https://stackoverflow.com/questions/51520/how-to-get-an-absolute-file-path-in-python
-            job_id = payload["job_id"]
-            message = f"labeling in progress"
+            self.upload_label_data()
             self.end_exp(message)
             return
 
@@ -237,7 +234,6 @@ class Pipeline(object):
         expt_dir = [payload["user_id"], payload["project_id"], payload["experiment_id"]]
 
         if self.bucket_name == "alectio-sandbox":
-            # shared S3 bucket for sandbox user
             self.expt_dir = os.path.join(
                 payload["user_id"], payload["project_id"], payload["experiment_id"]
             )
@@ -299,15 +295,8 @@ class Pipeline(object):
                 return
 
             # need to upload data_map
-            if self.needs_labeling and self.labeling_type == "partner" and self.current_loop > 0:
-                # upload data with alectio cli, refer to alectio cli for more info
-                # need to upload an absolute path
-                # https://stackoverflow.com/questions/51520/how-to-get-an-absolute-file-path-in-python
-                # look at the data map, should be able to reference the data map even if the sdk
-                # "dies"
-
-
-                job_id = payload["job_id"]
+            if self.needs_labeling and self.labeling_type == "partner":
+                self.upload_label_data()
                 message = f"labeling in progress"
                 self.end_exp(message)
                 return
@@ -339,6 +328,7 @@ class Pipeline(object):
                     "json",
                 )
             self.app.logger.info("Reference creation complete")
+
         else:
 
             # check if ckpt cur_loop - 1 exists, otherwise we need to download it from S3
@@ -667,6 +657,17 @@ class Pipeline(object):
         os.environ['ALECTIO_API_KEY'] = ""
         os.environ['CLIENT_SECRET'] = ""
         os.environ['CLIENT_ID'] = ""
+        return
+
+    @staticmethod
+    def upload_label_data():
+        data_to_label = {}
+        job = self.alectio_client.job(self.job_id)
+        indices = job.indices
+
+        for idx in indices:
+            data_to_label[idx] = os.path.abs(self.state_json[int(idx)])
+            job.upload_data(data_to_label)
         return
 
     @staticmethod
