@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # import os
 # import torch
 # import torchtext
@@ -9,9 +10,7 @@
 from tqdm import tqdm
 from model import TextSentiment
 
-=======
-from tqdm import tqdm
->>>>>>> 44257986bd8eef45d8762088f62113d623f6139b
+rom tqdm import tqdm
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -166,7 +165,7 @@ def test(args, ckpt_file):
     truelabels = truelabels_
     predictions = predictions_
 
-    # print("predictions",predictions)
+   # print("predictions",predictions)
 
     return {"predictions": predictions, "labels": truelabels}
 

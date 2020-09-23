@@ -2,14 +2,8 @@ from flask import jsonify
 from flask import Flask, Response
 from flask import request
 from flask import send_file
-from waitress import serve
-from copy import deepcopy
-from .s3_client import S3Client
-from alectio_sdk.metrics.object_detection import Metrics, batch_to_numpy
-from sentry_sdk.integrations.flask import FlaskIntegration
-from copy import deepcopy
 
-
+# from waitress import serve
 import numpy as np
 import json
 import requests
@@ -22,14 +16,17 @@ import boto3
 import json
 import logging
 import sklearn.metrics
+from copy import deepcopy
+from .s3_client import S3Client
+from alectio_sdk.metrics.object_detection import Metrics, batch_to_numpy
 import sentry_sdk
-import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+# from sklearn.externals import joblib
 import joblib
 
 # modules for testing
 import argparse
 import yaml, json
-
 
 
 class Pipeline(object):
@@ -151,24 +148,8 @@ class Pipeline(object):
             "bucket_name": request.get_json()["bucket_name"],
             "type": request.get_json()["type"],
             "n_rec": request.get_json()["n_rec"],
-            "n_loops": request.get_json()["n_rec"],
-            "needs_labeling": request.get_json()["needs_labeling"],
-            "labeling_type": request.get_json()["labeling_type"] ,
-            "job_id": request.get_json()["job_id"]
-        }
-
-        print('## RECEIVED PAYLOAD FROM THE BACKEND ##')
-
-        # data preloading if an incomming job is sent
-        labeling_type = payload["labeling_type"]
-        needs_labeling = payload["needs_labeling"]
-
-        if needs_labeling and labeling_type == "partner":
-            # upload data with alectio cli, refer to alectio cli for more info
-            message = f"labeling in progress"
-            self.end_exp(message)
-            return
-
+            "n_loop": request.get_json()["n_loop"]
+            }
         self.logdir = payload["experiment_id"]
         self._checkdirs(self.logdir)
         self.args["LOG_DIR"] = self.logdir
@@ -176,7 +157,6 @@ class Pipeline(object):
         self._notifyserverstatus(self.logdir)
         self.app.logger.info("Valid payload arguments extracted")
         self.app.logger.info("Initializing process to train and optimize your model")
-
         returned_payload = self._one_loop(payload, self.args)
         self.app.logger.info("Optimization process complete !")
         self.app.logger.info(
@@ -258,7 +238,7 @@ class Pipeline(object):
                 self.demopayload["experiment_id"],
             )
 
-
+        
 
             self.demoproject_dir = os.path.join(self.demopayload["project_id"])
 
@@ -275,7 +255,7 @@ class Pipeline(object):
         self.app.logger.info(
             "SDK Retrieved file: {} from bucket : {}".format(key, self.bucket_name)
         )
-
+    
         self.train_size = int(self.meta_data["train_size"])
         # self.meta_data = self.client.read(self.bucket_name, key, "json")
         # logging.info('SDK Retrieved file: {} from bucket : {}'.format(key, self.bucket_name))
@@ -289,8 +269,12 @@ class Pipeline(object):
             local_data_set_size = len(self.state_json.keys())
             if local_data_set_size != self.train_size:
                 # please make sure to submit the correct training size
+                print('======== Experiment Ended ========')
+                print('Server shutting down...')
                 warning_message = f"Current data set size: {local_data_set_size} does not match the training set size {self.train_size} ..."
-                self.end_exp(warning_message)
+                print(warning_message)
+                p = psutil.Process(os.getpid())
+                p.terminate() 
                 return
 
 
@@ -650,11 +634,10 @@ class Pipeline(object):
         func()
 
     @staticmethod
-    def end_exp(msg=None):
-        print('======== Experiment Ended ========')
-        print('Server shutting down ...')
-        print(msg)
+    def end_exp():
+        print()
+        print("======== Experiment Ended ========")
+        print("Server shutting down...")
         p = psutil.Process(os.getpid())
         p.terminate()
         return "Experiment complete"
-
