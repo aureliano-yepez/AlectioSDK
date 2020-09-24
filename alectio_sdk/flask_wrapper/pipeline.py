@@ -143,9 +143,8 @@ class Pipeline(object):
 
 
     def one_loop(self):
-        # Get payload args
+
         self.app.logger.info("Extracting payload arguments from Alectio")
-        # Get payload args
         payload = {
             "experiment_id": request.get_json()["experiment_id"],
             "project_id": request.get_json()["project_id"],
@@ -162,11 +161,12 @@ class Pipeline(object):
 
         print('## RECEIVED PAYLOAD FROM THE BACKEND ##')
 
-        # data preloading if an incomming job is sent
         self.labeling_type = payload["labeling_type"]
         self.needs_labeling = payload["needs_labeling"]
         self.cur_loop = payload["cur_loop"]
         self.job_id = payload["job_id"]
+        self.project_id = payload["project_id"]
+        self.experiment_id = payload["experiment_id"]
 
         if self.needs_labeling and self.labeling_type == "partner" and self.current_loop > 0:
             self.upload_label_data()
@@ -501,7 +501,6 @@ class Pipeline(object):
         self.compute_metrics(predictions, ground_truth)
         return
 
-
     def compute_metrics(self, predictions, ground_truth):
         metrics = {}
         if self.type == "Object Detection":
@@ -652,7 +651,6 @@ class Pipeline(object):
         )
         self.app.run()
 
-
     @staticmethod
     def set_alectio_client_env():
         os.environ['ALECTIO_API_KEY'] = ""
@@ -663,12 +661,11 @@ class Pipeline(object):
     @staticmethod
     def upload_label_data(self):
         data_to_label = {}
-        job = self.alectio_client.job(self.job_id)
+        job = self.alectio_client.job(self.job_id, self.project_id)
         indices = job.indices
-
         for idx in indices:
             data_to_label[idx] = os.path.abs(self.state_json[int(idx)])
-            job.upload_data(data_to_label)
+        job.upload_data(data_to_label)
         return
 
     @staticmethod
