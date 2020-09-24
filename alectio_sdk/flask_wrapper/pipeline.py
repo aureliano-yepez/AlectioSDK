@@ -576,6 +576,7 @@ class Pipeline(object):
             )
         return
 
+
     def infer(self, args):
         r"""
         A wrapper for your `infer` function which writes outputs to the specified S3 bucket. Returns `None`.
