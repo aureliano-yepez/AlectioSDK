@@ -295,7 +295,7 @@ class Pipeline(object):
             # need to upload data_map
             if self.needs_labeling and self.labeling_type == "partner":
                 self.upload_label_data()
-                message = f"labeling in progress"
+                message = "labeling in progress"
                 self.end_exp(message)
                 return
 
@@ -482,7 +482,7 @@ class Pipeline(object):
         if self.cur_loop == 0:
             # write ground truth to S3
             object_key = os.path.join(
-                self.expt_dir, "test_ground_truth.pkl".format(self.cur_loop)
+                self.expt_dir, "test_ground_truth_{}.pkl".format(self.cur_loop)
             )
             self.client.multi_part_upload_with_s3(
                 ground_truth, self.bucket_name, object_key, "pickle"
@@ -661,7 +661,7 @@ class Pipeline(object):
         return
 
     @staticmethod
-    def upload_label_data():
+    def upload_label_data(self):
         data_to_label = {}
         job = self.alectio_client.job(self.job_id)
         indices = job.indices
