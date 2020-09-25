@@ -155,20 +155,20 @@ class Pipeline(object):
             "n_rec": request.get_json()["n_rec"],
             "n_loops": request.get_json()["n_rec"],
             "needs_labeling": request.get_json()["needs_labeling"],
-            "labeling_type": request.get_json()["labeling_type"] ,
+            "label_type": request.get_json()["label_type"] ,
             "job_id": request.get_json()["job_id"]
         }
 
         print('## RECEIVED PAYLOAD FROM THE BACKEND ##')
 
-        self.labeling_type = payload["labeling_type"]
+        self.labeling_type = payload["label_type"]
         self.needs_labeling = payload["needs_labeling"]
-        self.cur_loop = payload["cur_loop"]
+        self.cur_loop = int(payload["cur_loop"])
         self.job_id = payload["job_id"]
         self.project_id = payload["project_id"]
         self.experiment_id = payload["experiment_id"]
 
-        if self.needs_labeling and self.labeling_type == "partner" and self.current_loop > 0:
+        if self.needs_labeling and self.labeling_type == "partner" and self.cur_loop > 0:
             self.upload_label_data()
             self.end_exp(message)
             return
@@ -576,6 +576,7 @@ class Pipeline(object):
             )
         return
 
+
     def infer(self, args):
         r"""
         A wrapper for your `infer` function which writes outputs to the specified S3 bucket. Returns `None`.
@@ -661,11 +662,12 @@ class Pipeline(object):
 
     @staticmethod
     def upload_label_data(self):
+        self.app.logger.info("Uploading data to be labeled ... ")
         data_to_label = {}
         job = self.alectio_client.job(self.job_id, self.project_id)
         indices = job.indices
         for idx in indices:
-            data_to_label[idx] = os.path.abs(self.state_json[int(idx)])
+            data_to_label[str(idx)] = os.path.abs(self.state_json[int(idx)])
         job.upload_data(data_to_label)
         return
 

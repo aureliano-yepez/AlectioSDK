@@ -13,3 +13,8 @@ flask
 pandas
 scikit-image
 pyyaml
+psutil
+boto3
+sentry_sdk
+blinker
+sklearn

@@ -45,7 +45,7 @@ def train(args, labeled, resume_from, ckpt_file):
     torch.backends.cudnn.deterministic = True
     # hyperparameters
     config_file = "yolov3.cfg"
-    epochs, batch_size = args["train_epochs"], args["batch_size"]
+    epochs, batch_size = 1, args["batch_size"]
     accumulated_batches = args["accumulated_batches"]
     best_mAP = args["best_mAP"]
     # Get hyper parameters
