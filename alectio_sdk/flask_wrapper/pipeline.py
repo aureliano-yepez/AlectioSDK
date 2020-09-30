@@ -290,7 +290,7 @@ class Pipeline(object):
                 warning_message = f"Current data set size: {local_data_set_size} does not match the training set size {self.train_size} ..."
                 self.end_exp(warning_message)
                 return
-
+            # TODO: change condition here, need to upload data_map.pkl first
             # need to upload data_map
             if self.needs_labeling and self.labeling_type == "partner":
                 self.upload_label_data()
