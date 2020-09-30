@@ -26,7 +26,6 @@ import sentry_sdk
 import sentry_sdk
 import joblib
 
-# modules for testing
 import argparse
 import yaml, json
 
@@ -153,7 +152,7 @@ class Pipeline(object):
             "bucket_name": request.get_json()["bucket_name"],
             "type": request.get_json()["type"],
             "n_rec": request.get_json()["n_rec"],
-            "n_loops": request.get_json()["n_rec"],
+            "n_loop": request.get_json()["n_loop"],
             "needs_labeling": request.get_json()["needs_labeling"],
             "label_type": request.get_json()["label_type"] ,
             "job_id": request.get_json()["job_id"]
@@ -661,7 +660,7 @@ class Pipeline(object):
         return
 
     @staticmethod
-    def upload_label_data(self):
+    def upload_label_data():
         self.app.logger.info("Uploading data to be labeled ... ")
         data_to_label = {}
         job = self.alectio_client.job(self.job_id, self.project_id)
