@@ -666,7 +666,7 @@ class Pipeline(object):
         job = self.alectio_client.job(self.job_id, self.project_id)
         indices = job.indices
         for idx in indices:
-            data_to_label[str(idx)] = os.path.abs(self.state_json[int(idx)])
+            data_to_label[str(idx)] = os.path.abspath(self.state_json[int(idx)])
         job.upload_data(data_to_label)
         return
 
