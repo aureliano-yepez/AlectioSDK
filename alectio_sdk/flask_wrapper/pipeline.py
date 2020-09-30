@@ -659,8 +659,8 @@ class Pipeline(object):
         os.environ['CLIENT_ID'] = ""
         return
 
-    @staticmethod
-    def upload_label_data():
+
+    def upload_label_data(self):
         self.app.logger.info("Uploading data to be labeled ... ")
         data_to_label = {}
         job = self.alectio_client.job(self.job_id, self.project_id)
