@@ -290,14 +290,6 @@ class Pipeline(object):
                 warning_message = f"Current data set size: {local_data_set_size} does not match the training set size {self.train_size} ..."
                 self.end_exp(warning_message)
                 return
-            # TODO: change condition here, need to upload data_map.pkl first
-            # need to upload data_map
-            if self.needs_labeling and self.labeling_type == "partner":
-                self.upload_label_data()
-                message = "labeling in progress"
-                self.end_exp(message)
-                return
-
 
             object_key = os.path.join(self.expt_dir, "data_map.pkl")
             self.app.logger.info("Extraction complete !!!")
@@ -324,6 +316,13 @@ class Pipeline(object):
                     demometaobject_key,
                     "json",
                 )
+
+            if self.needs_labeling and self.labeling_type == "partner":
+                self.upload_label_data()
+                message = "labeling in progress"
+                self.end_exp(message)
+                return
+
             self.app.logger.info("Reference creation complete")
 
         else:
