@@ -240,7 +240,6 @@ class Pipeline(object):
             )
 
             self.project_dir = os.path.join(payload["user_id"], payload["project_id"])
-            self.app.logger.info("here -1")
         else:
             # dedicated S3 bucket for paid user
             self.expt_dir = os.path.join(
